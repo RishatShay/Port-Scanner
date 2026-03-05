@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/RishatShay/Port-Scanner/internal"
+	"github.com/RishatShay/Port-Scanner/internal/scanner"
 )
 
 func main() {
@@ -12,6 +12,6 @@ func main() {
 	target := "scanme.nmap.org"
 	protocol := "tcp"
 
-	internal.WorkerPool(protocol, target)
+	scanner.WorkerPool(protocol, target)
 	fmt.Println(time.Since(start))
 }
