@@ -7,8 +7,10 @@ import (
 	"time"
 )
 
-func ScanPort(ctx context.Context, protocol string, target string, port int) bool {
-	ctx, cancel := context.WithTimeout(ctx, time.Second)
+// ScanPort tries to open a connection to a single port and reports whether
+// it is open. It gives up after timeout.
+func ScanPort(ctx context.Context, protocol string, target string, port int, timeout time.Duration) bool {
+	ctx, cancel := context.WithTimeout(ctx, timeout)
 	defer cancel()
 
 	address := fmt.Sprintf("%s:%d", target, port)

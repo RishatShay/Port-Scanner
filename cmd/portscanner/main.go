@@ -10,11 +10,17 @@ import (
 
 func main() {
 	host := flag.String("host", "scanme.nmap.org", "target host to scan")
+	protocol := flag.String("protocol", "tcp", "protocol to use: tcp or udp")
+	timeout := flag.Duration("timeout", time.Second, "timeout per port")
 	flag.Parse()
 
-	protocol := "tcp"
+	cfg := scanner.Config{
+		Host:     *host,
+		Protocol: *protocol,
+		Timeout:  *timeout,
+	}
 
 	start := time.Now()
-	scanner.WorkerPool(protocol, *host)
+	scanner.WorkerPool(cfg)
 	fmt.Println(time.Since(start))
 }

@@ -6,6 +6,7 @@ import (
 	"os/signal"
 	"sync"
 	"syscall"
+	"time"
 )
 
 const (
@@ -13,12 +14,19 @@ const (
 	osMaxSockets int = 1150
 )
 
+// Config holds everything the scanner needs to know about a scan.
+type Config struct {
+	Host     string
+	Protocol string
+	Timeout  time.Duration
+}
+
 type portStatus struct {
 	num    int
 	status bool
 }
 
-func WorkerPool(protocol string, target string) {
+func WorkerPool(cfg Config) {
 	ctx := context.Background()
 	ctx, cancel := signal.NotifyContext(ctx, syscall.SIGINT, syscall.SIGTERM)
 	defer cancel()
@@ -44,7 +52,7 @@ func WorkerPool(protocol string, target string) {
 			defer wg.Done()
 
 			for port := range inputs {
-				res := ScanPort(ctx, protocol, target, port)
+				res := ScanPort(ctx, cfg.Protocol, cfg.Host, port, cfg.Timeout)
 				results <- portStatus{num: port, status: res}
 			}
 
