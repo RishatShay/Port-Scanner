@@ -1,6 +1,7 @@
 package main
 
 import (
+	"flag"
 	"fmt"
 	"time"
 
@@ -8,10 +9,12 @@ import (
 )
 
 func main() {
-	start := time.Now()
-	target := "scanme.nmap.org"
+	host := flag.String("host", "scanme.nmap.org", "target host to scan")
+	flag.Parse()
+
 	protocol := "tcp"
 
-	scanner.WorkerPool(protocol, target)
+	start := time.Now()
+	scanner.WorkerPool(protocol, *host)
 	fmt.Println(time.Since(start))
 }
