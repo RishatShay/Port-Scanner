@@ -10,14 +10,17 @@ import (
 )
 
 const (
-	portsNum     int = 65535
-	osMaxSockets int = 1150
+	portsNum int = 65535
+
+	// defaultWorkers is used when Config.Workers is not set.
+	defaultWorkers int = 500
 )
 
 // Config holds everything the scanner needs to know about a scan.
 type Config struct {
 	Host     string
 	Protocol string
+	Workers  int
 	Timeout  time.Duration
 }
 
@@ -27,6 +30,11 @@ type portStatus struct {
 }
 
 func WorkerPool(cfg Config) {
+	workers := cfg.Workers
+	if workers <= 0 {
+		workers = defaultWorkers
+	}
+
 	ctx := context.Background()
 	ctx, cancel := signal.NotifyContext(ctx, syscall.SIGINT, syscall.SIGTERM)
 	defer cancel()
@@ -45,9 +53,9 @@ func WorkerPool(cfg Config) {
 
 	results := make(chan portStatus, 100)
 	var wg sync.WaitGroup
-	wg.Add(osMaxSockets)
+	wg.Add(workers)
 
-	for range osMaxSockets {
+	for range workers {
 		go func() {
 			defer wg.Done()
 
