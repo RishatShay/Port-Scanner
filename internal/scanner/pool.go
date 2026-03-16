@@ -9,17 +9,14 @@ import (
 	"time"
 )
 
-const (
-	portsNum int = 65535
-
-	// defaultWorkers is used when Config.Workers is not set.
-	defaultWorkers int = 500
-)
+// defaultWorkers is used when Config.Workers is not set.
+const defaultWorkers int = 500
 
 // Config holds everything the scanner needs to know about a scan.
 type Config struct {
 	Host     string
 	Protocol string
+	Ports    []int
 	Workers  int
 	Timeout  time.Duration
 }
@@ -42,11 +39,11 @@ func WorkerPool(cfg Config) {
 	inputs := make(chan int, 100)
 	go func() {
 		defer close(inputs)
-		for i := 1; i <= portsNum; i++ {
+		for _, port := range cfg.Ports {
 			select {
 			case <-ctx.Done():
 				return
-			case inputs <- i:
+			case inputs <- port:
 			}
 		}
 	}()
