@@ -1,9 +1,12 @@
 package main
 
 import (
+	"context"
 	"flag"
 	"fmt"
 	"os"
+	"os/signal"
+	"syscall"
 	"time"
 
 	"github.com/RishatShay/Port-Scanner/internal/scanner"
@@ -31,7 +34,14 @@ func main() {
 		Timeout:  *timeout,
 	}
 
+	ctx, cancel := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)
+	defer cancel()
+
 	start := time.Now()
-	scanner.WorkerPool(cfg)
-	fmt.Println(time.Since(start))
+	results := scanner.Run(ctx, cfg)
+
+	for _, r := range results {
+		fmt.Printf("%d/%s is open\n", r.Port, *protocol)
+	}
+	fmt.Printf("scanned %d ports in %s, found %d open\n", len(ports), time.Since(start), len(results))
 }

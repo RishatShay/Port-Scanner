@@ -2,10 +2,8 @@ package scanner
 
 import (
 	"context"
-	"fmt"
-	"os/signal"
+	"sort"
 	"sync"
-	"syscall"
 	"time"
 )
 
@@ -21,20 +19,19 @@ type Config struct {
 	Timeout  time.Duration
 }
 
-type portStatus struct {
-	num    int
-	status bool
+// Result is the outcome of scanning a single port.
+type Result struct {
+	Port int
+	Open bool
 }
 
-func WorkerPool(cfg Config) {
+// Run scans all ports from cfg concurrently and returns the open ones,
+// sorted by port number. It stops early if ctx is cancelled.
+func Run(ctx context.Context, cfg Config) []Result {
 	workers := cfg.Workers
 	if workers <= 0 {
 		workers = defaultWorkers
 	}
-
-	ctx := context.Background()
-	ctx, cancel := signal.NotifyContext(ctx, syscall.SIGINT, syscall.SIGTERM)
-	defer cancel()
 
 	inputs := make(chan int, 100)
 	go func() {
@@ -48,7 +45,7 @@ func WorkerPool(cfg Config) {
 		}
 	}()
 
-	results := make(chan portStatus, 100)
+	results := make(chan Result, 100)
 	var wg sync.WaitGroup
 	wg.Add(workers)
 
@@ -57,10 +54,9 @@ func WorkerPool(cfg Config) {
 			defer wg.Done()
 
 			for port := range inputs {
-				res := ScanPort(ctx, cfg.Protocol, cfg.Host, port, cfg.Timeout)
-				results <- portStatus{num: port, status: res}
+				open := ScanPort(ctx, cfg.Protocol, cfg.Host, port, cfg.Timeout)
+				results <- Result{Port: port, Open: open}
 			}
-
 		}()
 	}
 
@@ -69,9 +65,13 @@ func WorkerPool(cfg Config) {
 		close(results)
 	}()
 
-	for v := range results {
-		if v.status {
-			fmt.Printf("Port %d is open\n", v.num)
+	var open []Result
+	for r := range results {
+		if r.Open {
+			open = append(open, r)
 		}
 	}
+
+	sort.Slice(open, func(i, j int) bool { return open[i].Port < open[j].Port })
+	return open
 }
