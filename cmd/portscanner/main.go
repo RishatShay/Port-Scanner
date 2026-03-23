@@ -20,6 +20,16 @@ func main() {
 	workers := flag.Int("workers", 500, "number of concurrent workers")
 	flag.Parse()
 
+	if *protocol != "tcp" && *protocol != "udp" {
+		fmt.Fprintln(os.Stderr, "protocol must be either tcp or udp")
+		os.Exit(1)
+	}
+
+	if *host == "" {
+		fmt.Fprintln(os.Stderr, "host must not be empty")
+		os.Exit(1)
+	}
+
 	ports, err := scanner.ParsePorts(*portsFlag)
 	if err != nil {
 		fmt.Fprintln(os.Stderr, "invalid ports:", err)
