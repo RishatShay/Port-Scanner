@@ -51,7 +51,7 @@ func main() {
 	results := scanner.Run(ctx, cfg)
 
 	for _, r := range results {
-		fmt.Printf("%d/%s is open (%s)\n", r.Port, *protocol, scanner.ServiceName(r.Port))
+		fmt.Printf("%d/%s is open\n", r.Port, *protocol)
 	}
 	fmt.Printf("scanned %d ports in %s, found %d open\n", len(ports), time.Since(start), len(results))
 }
