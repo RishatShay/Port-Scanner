@@ -9,6 +9,7 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/RishatShay/Port-Scanner/internal/owner"
 	"github.com/RishatShay/Port-Scanner/internal/scanner"
 )
 
@@ -47,10 +48,18 @@ func main() {
 	ctx, cancel := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)
 	defer cancel()
 
+	local := owner.IsLocalHost(*host)
+
 	start := time.Now()
 	results := scanner.Run(ctx, cfg)
 
 	for _, r := range results {
+		if local {
+			if o, ok := owner.Lookup(*protocol, r.Port); ok {
+				fmt.Printf("%d/%s is open (pid %d, %s)\n", r.Port, *protocol, o.PID, o.Name)
+				continue
+			}
+		}
 		fmt.Printf("%d/%s is open\n", r.Port, *protocol)
 	}
 	fmt.Printf("scanned %d ports in %s, found %d open\n", len(ports), time.Since(start), len(results))
